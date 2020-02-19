@@ -24,6 +24,18 @@ jobs:
       with:
         python-version: 3.6
 
+    - name: 'Install Azure Functions extensions'
+      shell: bash
+      run: |
+        # If your function app project is not located in your repository's root
+        # Please change your directory for pip in pushd
+        pushd ./functions
+        if [ -f extensions.csproj ]
+        then
+            dotnet build extensions.csproj --runtime ubuntu.16.04-x64 --output ./bin
+        fi
+        popd
+
     - name: 'Run pip'
       shell: bash
       run: |

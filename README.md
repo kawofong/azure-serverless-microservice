@@ -27,9 +27,7 @@ Azure serverless demo highlighting key functionalities of Azure Functions, API M
   - Create a new connection string entry with key `CosmosDBConnection` and value of Azure CosmosDB primary connection string (from above) in Azure Functions application settings (under `azure-serverless-func` -> "Configuration")
 
 - To configure GitHub Actions with Azure, take the below steps
-  - Create service principal
-    - `az ad sp create-for-rbac --name "myApp" --role contributor --scopes /subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP>/providers/Microsoft.Web/sites/<APP_NAME> --sdk-auth`
-  - Add service principal to GitHub as secret
+  - Follow steps [here](https://github.com/marketplace/actions/azure-functions-action#using-publish-profile-as-deployment-credential)
 
 - For local development, use [Azure Functions Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=linux) to test Azure Functions locally
 

@@ -43,6 +43,3 @@ ReadFromStorage/sample.dat
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Azure Functions extensions
-*.csproj
