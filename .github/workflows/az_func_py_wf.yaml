@@ -1,0 +1,49 @@
+
+# Action Requires
+# 1. Setup the AZURE_CREDENTIALS secrets in your GitHub Repository
+# 2. Replace PLEASE_REPLACE_THIS_WITH_YOUR_FUNCTION_APP_NAME with your Azure function app name
+# 3. Add this yaml file to your project's .github/workflows/
+# 4. Push your local project to your GitHub Repository
+
+name: az_func_py_wf
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@master
+
+    - name: Setup Python 3.6
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.6
+
+    - name: 'Run pip'
+      shell: bash
+      run: |
+        # If your function app project is not located in your repository's root
+        # Please change your directory for pip in pushd
+        pushd ./functions
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt --target=".python_packages/lib/python3.6/site-packages"
+        popd
+
+    - name: 'Run Azure Functions Action'
+      uses: Azure/functions-action@v1
+      id: fa
+      with:
+        app-name: azure-oh-serverless-func
+        publish-profile: ${{ secrets.SCM_CREDENTIALS }}
+        # If your function app project is not located in your repository's root
+        # Please consider prefixing the project path in this package parameter
+        package: './functions'
+
+    - name: 'use the published functionapp url in upcoming steps'
+      run: |
+        echo "${{ steps.fa.outputs.app-url }}"
