@@ -17,9 +17,4 @@ def main(event: func.EventHubEvent,
     for sale_event in sale_events:
         newdoc = sale_event
         newdoc['id'] = str(uuid.uuid4())
-        # logging.info(newdoc)
         cosmosDbDoc.set(func.Document.from_dict(newdoc))
-
-        # output = json.dumps(newdoc)
-        # # logging.warn(output)
-        # cosmosDbDoc.set(func.Document.from_json(output))
