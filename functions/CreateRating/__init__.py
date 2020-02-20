@@ -59,7 +59,6 @@ def main(req: func.HttpRequest,
 
     # Write doc to Azure Cosmos DB
     cosmosDbDoc.set(func.Document.from_dict(review_doc))
-    # cosmosDbDoc.set(review_doc)
 
     # Return the entire review JSON payload with the newly created id and timestamp
     return func.HttpResponse(
