@@ -1,0 +1,120 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+    "baseName": {
+      "type": "string",
+      "maxLength": 10,
+      "minLength": 3,
+      "metadata": {
+        "description": "The base name to use as prefix to create all the resources."
+      }
+    },
+		"location": {
+			"type": "string",
+			"defaultValue": "[resourceGroup().location]",
+			"metadata": {
+				"description": "Location for the Cosmos DB account."
+			}
+		},
+		"throughput": {
+			"type": "int",
+			"defaultValue": 400,
+			"minValue": 400,
+			"maxValue": 1000000,
+			"metadata": {
+				"description": "The throughput for the database to be shared"
+			}
+		}
+	},
+	"variables": {
+    "accountName": "[toLower(concat(parameters('baseName'),'-cosmos'))]",
+    "databaseName": "ContosoDB",
+    "ProductRatingContainerName": "ProductRatings",
+    "OrderContainerName": "Orders",
+    "SalesContainerName": "Sales"
+	},
+	"resources":
+	[
+		{
+			"type": "Microsoft.DocumentDB/databaseAccounts",
+			"name": "[variables('accountName')]",
+			"apiVersion": "2019-08-01",
+			"kind": "GlobalDocumentDB",
+			"location": "[parameters('location')]",
+			"properties": {
+				"consistencyPolicy": {
+          "defaultConsistencyLevel": "Session"
+        },
+				"locations": "[variables('locations')]",
+				"databaseAccountOfferType": "Standard"
+			}
+		},
+		{
+			"type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+			"name": "[concat(variables('accountName'), '/', variables('databaseName'))]",
+			"apiVersion": "2019-08-01",
+			"dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('accountName'))]" ],
+			"properties":{
+				"resource":{
+					"id": "[parameters('databaseName')]"
+				},
+				"options": { "throughput": "[parameters('throughput')]" }
+			}
+		},
+		{
+			"type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+			"name": "[concat(variables('accountName'), '/', variables('databaseName'), '/', variables('ProductRatingContainerName'))]",
+			"apiVersion": "2019-08-01",
+			"dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('accountName'), parameters('databaseName'))]" ],
+			"properties":
+			{
+				"resource":{
+					"id":  "[variables('ProductRatingContainerName')]",
+					"partitionKey": {
+						"paths": [
+						"/productId"
+						],
+						"kind": "Hash"
+					}
+				}
+			}
+		},
+		{
+			"type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+			"name": "[concat(variables('accountName'), '/', variables('databaseName'), '/', variables('OrderContainerName'))]",
+			"apiVersion": "2019-08-01",
+			"dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('accountName'), parameters('databaseName'))]" ],
+			"properties":
+			{
+				"resource":{
+					"id":  "[variables('OrderContainerName')]",
+					"partitionKey": {
+						"paths": [
+						"/item/headers/salesNumber"
+						],
+						"kind": "Hash"
+					}
+				}
+			}
+		},
+		{
+			"type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+			"name": "[concat(variables('accountName'), '/', variables('databaseName'), '/', variables('SalesContainerName'))]",
+			"apiVersion": "2019-08-01",
+			"dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('accountName'), parameters('databaseName'))]" ],
+			"properties":
+			{
+				"resource":{
+					"id":  "[variables('SalesContainerName')]",
+					"partitionKey": {
+						"paths": [
+						"/header/locationId"
+						],
+						"kind": "Hash"
+					}
+				}
+			}
+		}
+	]
+}

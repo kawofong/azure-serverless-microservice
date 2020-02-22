@@ -27,11 +27,12 @@
     }
   },
   "variables": {
-    "storageAccountName": "[concat(toLower(replace(parameters('baseName'),'-', '')), 'sa')]",
+    "storageAccountName": "[concat(toLower(replace(parameters('baseName'),'-', '')), 'funcsa')]",
     "storageAccountType": "Standard_LRS",
     "storageAccountid": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
     "hostingPlanName": "[concat(parameters('baseName'),'-asp')]",
-    "applicationInsightsName": "[concat(parameters('baseName'),'-appinsight')]"
+    "applicationInsightsName": "[concat(parameters('baseName'),'-func-appinsight')]",
+    "functionAppName": "[concat(parameters('baseName'),'-func')]"
   },
   "resources": [
     {
