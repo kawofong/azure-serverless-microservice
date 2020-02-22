@@ -16,14 +16,6 @@
       "metadata": {
         "description": "Specifies the Azure location for all resources."
       }
-    },
-    "eventHubSku": {
-      "type": "string",
-      "allowedValues": [ "Basic", "Standard" ],
-      "defaultValue": "Standard",
-      "metadata": {
-        "description": "Specifies the messaging tier for service Bus namespace."
-      }
     }
   },
   "variables": {
@@ -37,8 +29,8 @@
       "name": "[variables('eventHubNamespaceName')]",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "[parameters('eventHubSku')]",
-        "tier": "[parameters('eventHubSku')]",
+        "name": "Standard",
+        "tier": "Standard",
         "capacity": 1
       },
       "properties": {
