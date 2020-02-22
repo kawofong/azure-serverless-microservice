@@ -57,7 +57,7 @@
 			"dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('accountName'))]" ],
 			"properties":{
 				"resource":{
-					"id": "[parameters('databaseName')]"
+					"id": "[variables('databaseName')]"
 				},
 				"options": { "throughput": "[parameters('throughput')]" }
 			}
@@ -66,7 +66,7 @@
 			"type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
 			"name": "[concat(variables('accountName'), '/', variables('databaseName'), '/', variables('ProductRatingContainerName'))]",
 			"apiVersion": "2019-08-01",
-			"dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('accountName'), parameters('databaseName'))]" ],
+			"dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('accountName'), variables('databaseName'))]" ],
 			"properties":
 			{
 				"resource":{
@@ -84,7 +84,7 @@
 			"type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
 			"name": "[concat(variables('accountName'), '/', variables('databaseName'), '/', variables('OrderContainerName'))]",
 			"apiVersion": "2019-08-01",
-			"dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('accountName'), parameters('databaseName'))]" ],
+			"dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('accountName'), variables('databaseName'))]" ],
 			"properties":
 			{
 				"resource":{
@@ -102,7 +102,7 @@
 			"type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
 			"name": "[concat(variables('accountName'), '/', variables('databaseName'), '/', variables('SalesContainerName'))]",
 			"apiVersion": "2019-08-01",
-			"dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('accountName'), parameters('databaseName'))]" ],
+			"dependsOn": [ "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('accountName'), variables('databaseName'))]" ],
 			"properties":
 			{
 				"resource":{
