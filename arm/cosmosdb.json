@@ -46,7 +46,7 @@
 				"consistencyPolicy": {
           "defaultConsistencyLevel": "Session"
         },
-				"locations": "[variables('locations')]",
+				"locations": "[parameters('locations')]",
 				"databaseAccountOfferType": "Standard"
 			}
 		},
