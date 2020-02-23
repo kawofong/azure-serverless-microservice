@@ -1,0 +1,53 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "baseName": {
+      "type": "string",
+      "maxLength": 10,
+      "minLength": 3,
+      "metadata": {
+        "description": "The base name to use as prefix to create all the resources."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Specifies the Azure location for all resources."
+      }
+    }
+  },
+  "variables": {
+    "storageAccountName": "[concat(toLower(replace(parameters('baseName'),'-', '')), 'sa')]",
+    "containerName": "orders"
+  },
+  "resources": [
+    {
+      "name": "[variables('storageAccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2018-07-01",
+      "location": "[parameters('location')]",
+      "kind": "StorageV2",
+      "sku": {
+          "name": "Standard_LRS",
+          "tier": "Standard"
+      },
+      "properties": {
+          "accessTier": "Hot"
+      }
+    },
+    {
+        "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+        "apiVersion": "2019-06-01",
+        "name": "[concat(variables('storageAccountName'), '/default/', variables('containerName'))]",
+        "dependsOn": [
+            "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+        ],
+        "properties": {
+            "publicAccess": "Blob"
+        }
+    }
+  ],
+	"outputs": {}
+}
