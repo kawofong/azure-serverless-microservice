@@ -17,6 +17,18 @@
       "metadata": {
         "description": "Specifies the location for all resources."
       }
+    },
+    "ownerName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the owner of the solution."
+      }
+    },
+    "ownerEmail": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the owner of the solution."
+      }
     }
   },
   "variables": {},
@@ -84,6 +96,25 @@
         "parameters": {
           "baseName":{ "value": "[parameters('baseName')]" },
           "location":{ "value": "[parameters('location')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "name": "apim-linked-template",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'apim.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "baseName":{ "value": "[parameters('baseName')]" },
+          "location":{ "value": "[parameters('location')]" },
+          "publisherName":{ "value": "[parameters('ownerName')]" },
+          "publisherEmail":{ "value": "[parameters('ownerEmail')]" },
+          "functionName":{ "value": "[reference('function-linked-template').outputs.FunctionAppName.value]" }
         }
       }
     }
