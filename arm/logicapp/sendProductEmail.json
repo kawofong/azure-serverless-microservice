@@ -1,0 +1,270 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "baseName": {
+      "type": "string",
+      "maxLength": 10,
+      "minLength": 3,
+      "metadata": {
+        "description": "The base name to use as prefix to create all the resources."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Specifies the Azure location for all resources."
+      }
+    },
+    "connections_dynamicscrmonline_externalid": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource id of Dynamics CRM API connection."
+      }
+    },
+    "connections_office365_externalid": {
+        "type": "string",
+        "metadata": {
+          "description": "Resource id of Office365 API connection."
+        }
+    },
+    "ownerEmail": {
+      "type": "string",
+      "metadata": {
+        "description": "Email address of the owner of the service."
+      }
+    }
+  },
+  "variables": {
+    "apiConnectionName": "[concat(parameters('baseName'), '-apiconn-office365')]",
+    "logicAppWorkflowName": "[concat(parameters('baseName'),'-logicapp-sendemail')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2017-07-01",
+      "name": "[variables('logicAppWorkflowName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+          "state": "Enabled",
+          "definition": {
+              "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                  "$connections": {
+                      "defaultValue": {},
+                      "type": "Object"
+                  }
+              },
+              "triggers": {
+                  "manual": {
+                      "type": "Request",
+                      "kind": "Http",
+                      "inputs": {
+                          "schema": {}
+                      }
+                  }
+              },
+              "actions": {
+                  "Dynamics_CRM:_Get_Contacts": {
+                      "runAfter": {
+                          "HTTP_GET:_Get_Products": [
+                              "Succeeded"
+                          ]
+                      },
+                      "type": "ApiConnection",
+                      "inputs": {
+                          "host": {
+                              "connection": {
+                                  "name": "@parameters('$connections')['dynamicscrmonline']['connectionId']"
+                              }
+                          },
+                          "method": "get",
+                          "path": "/datasets/@{encodeURIComponent(encodeURIComponent('org208cd448.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('contacts'))}/items"
+                      }
+                  },
+                  "For_each": {
+                      "foreach": "@body('HTTP_GET:_Get_Products')",
+                      "actions": {
+                          "Append_to_string_variable": {
+                              "runAfter": {
+                                  "Parse_JSON": [
+                                      "Succeeded"
+                                  ]
+                              },
+                              "type": "AppendToStringVariable",
+                              "inputs": {
+                                  "name": "EmailProductTable",
+                                  "value": "<tr><td>@{body('Parse_JSON')?['productName']}</td><td>@{body('Parse_JSON')?['productDescription']}</td><td>@{body('Parse_JSON')?['productId']}</td></tr>"
+                              }
+                          },
+                          "Parse_JSON": {
+                              "runAfter": {},
+                              "type": "ParseJson",
+                              "inputs": {
+                                  "content": "@items('For_each')",
+                                  "schema": {
+                                      "properties": {
+                                          "productDescription": {
+                                              "type": "string"
+                                          },
+                                          "productId": {
+                                              "type": "string"
+                                          },
+                                          "productName": {
+                                              "type": "string"
+                                          }
+                                      },
+                                      "type": "object"
+                                  }
+                              }
+                          }
+                      },
+                      "runAfter": {
+                          "Variable:_Receiver_Email_Addresses": [
+                              "Succeeded"
+                          ]
+                      },
+                      "type": "Foreach"
+                  },
+                  "Foreach:_Distributor": {
+                      "foreach": "@body('Dynamics_CRM:_Get_Contacts')?['value']",
+                      "actions": {
+                          "AppendString:_Distributor_Email_Address_to_Receiver_Email_Addresses": {
+                              "runAfter": {},
+                              "type": "AppendToStringVariable",
+                              "inputs": {
+                                  "name": "EmailAddresses",
+                                  "value": "@{items('Foreach:_Distributor')?['emailaddress1']};"
+                              }
+                          }
+                      },
+                      "runAfter": {
+                          "For_each": [
+                              "Succeeded"
+                          ]
+                      },
+                      "type": "Foreach"
+                  },
+                  "HTTP_GET:_Get_Products": {
+                      "runAfter": {},
+                      "type": "Http",
+                      "inputs": {
+                          "method": "GET",
+                          "uri": "https://serverlessohproduct.trafficmanager.net/api/GetProducts"
+                      }
+                  },
+                  "Outlook:_Send_ice_cream_product_email": {
+                      "runAfter": {
+                          "Foreach:_Distributor": [
+                              "Succeeded"
+                          ]
+                      },
+                      "type": "ApiConnection",
+                      "inputs": {
+                          "body": {
+                              "Body": "<p>@{variables('EmailHeader')}@{variables('EmailProductTable')}@{variables('Email Footer')}</p>",
+                              "Subject": "Ice Cream Products",
+                              "To": "@variables('EmailAddresses')"
+                          },
+                          "host": {
+                              "connection": {
+                                  "name": "@parameters('$connections')['office365']['connectionId']"
+                              }
+                          },
+                          "method": "post",
+                          "path": "/v2/Mail"
+                      }
+                  },
+                  "Variable:_Email_Footer": {
+                      "runAfter": {
+                          "Variable:_Email_Product_Table": [
+                              "Succeeded"
+                          ]
+                      },
+                      "type": "InitializeVariable",
+                      "inputs": {
+                          "variables": [
+                              {
+                                  "name": "Email Footer",
+                                  "type": "string",
+                                  "value": "    </tbody>\n  </table>\n  <p style=\"text-align: center; margin-top: 3em;font-size: 20px;\">Please contact\n  your representative at Best For You Organics to get more information..</p>\n</body>\n</html>"
+                              }
+                          ]
+                      }
+                  },
+                  "Variable:_Email_Header": {
+                      "runAfter": {
+                          "Dynamics_CRM:_Get_Contacts": [
+                              "Succeeded"
+                          ]
+                      },
+                      "type": "InitializeVariable",
+                      "inputs": {
+                          "variables": [
+                              {
+                                  "name": "EmailHeader",
+                                  "type": "string",
+                                  "value": "<!DOCTYPE html>\n<html>\n<body style=\"background-color: whitesmoke; color: #454545; font-family:'Gill Sans',\n 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; padding-bottom: 3em;\">\n  <table style=\"width:100%; color:#454545\">\n    <tr>\n      <td style=\"width:11em;\">\n        <img style=\"margin-left:1em;\"\n        src=\"https://serverlessoh.azureedge.net/public/ice-cream-2202561_320-circle.jpg\"\n          height=\"160\" width=\"160\" alt=\"Fruit Ice Cream\">\n      </td>\n      <td>\n        <p style=\"font-style: italic; font-size: 50px;\n        font-weight:600; margin-left: 1em;\">Best For You Organics</p>\n      </td>\n    </tr>\n  </table>\n  <p style=\"text-align: center; font-style: italic; font-size:\n  80px;\">New Ice Cream Line!</p>\n  <p style=\"margin:2em 0em; font-size: 20px; text-align: center;\">\n  Best For You Organics have a new line of fruit flavored ice creams.\n  Below is the information so you can start the ordering process:\n  </p>\n  <table style=\"width:100%; border-top: 1px solid #454545;\n  border-bottom: 1px solid #454545; color:#454545; padding: 1em; font-size: 20px;\">\n    <thead>\n      <tr>\n        <th style=\"padding-bottom: 1em;\" align=\"left\">Ice Cream</th>\n        <th style=\"padding-bottom: 1em;\" align=\"left\">Description</th>\n        <th style=\"padding-bottom: 1em;\" align=\"left\">Product ID</th>\n      </tr>\n    </thead>\n    <tbody style=\"font-size: 16px;\">"
+                              }
+                          ]
+                      }
+                  },
+                  "Variable:_Email_Product_Table": {
+                      "runAfter": {
+                          "Variable:_Email_Header": [
+                              "Succeeded"
+                          ]
+                      },
+                      "type": "InitializeVariable",
+                      "inputs": {
+                          "variables": [
+                              {
+                                  "name": "EmailProductTable",
+                                  "type": "string"
+                              }
+                          ]
+                      }
+                  },
+                  "Variable:_Receiver_Email_Addresses": {
+                      "runAfter": {
+                          "Variable:_Email_Footer": [
+                              "Succeeded"
+                          ]
+                      },
+                      "type": "InitializeVariable",
+                      "inputs": {
+                          "variables": [
+                              {
+                                  "name": "EmailAddresses",
+                                  "type": "string",
+                                  "value": "[concat(parameters('ownerEmail'), ';')]"
+                              }
+                          ]
+                      }
+                  }
+              },
+              "outputs": {}
+          },
+          "parameters": {
+              "$connections": {
+                  "value": {
+                      "dynamicscrmonline": {
+                          "connectionId": "[parameters('connections_dynamicscrmonline_externalid')]",
+                          "connectionName": "dynamicscrmonline",
+                          "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/eastus/managedApis/dynamicscrmonline')]"
+                      },
+                      "office365": {
+                          "connectionId": "[parameters('connections_office365_externalid')]",
+                          "connectionName": "office365",
+                          "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/eastus/managedApis/office365')]"
+                      }
+                  }
+              }
+          }
+      }
+    }
+  ],
+	"outputs": {}
+}

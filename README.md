@@ -22,7 +22,8 @@ Azure serverless demo highlighting key functionalities of Azure Functions, API M
   - Run `terraform apply out.tfplan`
   - Note the outputs of `terraform apply`
 
-- Authorize the Dynamics CRM and Office365 API connections on Azure
+- Authorize Dynamics CRM and Office365 API connections for Logic App workflow
+  - Open API connection resource -> "Edit API Connection" -> "Authorize" -> follow authorization flow
 
 - To leverage GitHub Actions to continuous integrate & deploy Azure Functions, you have to add application settings to Azure Functions before deployment
   - Save Azure Cosmos DB primary connection string for later use
