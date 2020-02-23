@@ -117,6 +117,22 @@
           "functionName":{ "value": "[reference('function-linked-template').outputs.FunctionAppName.value]" }
         }
       }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "name": "dynamicscrm-apiconn-linked-template",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, './apiconnection/dynamicsCrm.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "baseName":{ "value": "[parameters('baseName')]" },
+          "location":{ "value": "[parameters('location')]" }
+        }
+      }
     }
   ]
 }
