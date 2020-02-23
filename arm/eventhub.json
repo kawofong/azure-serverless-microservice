@@ -20,7 +20,8 @@
   },
   "variables": {
     "eventHubNamespaceName": "[concat(parameters('baseName'), '-ehns')]",
-    "eventHubName": "pos-eh"
+    "eventHubName": "pos-eh",
+    "eventHubAuthRuleId": "[resourceId('Microsoft.EventHub/namespaces/eventhubs/authorizationRules', variables('eventHubNamespaceName'), variables('eventHubName'), 'Reader')]"
   },
   "resources": [
     {
@@ -50,6 +51,23 @@
         "messageRetentionInDays": 1,
         "partitionCount": 32
       }
+    },
+    {
+      "apiVersion": "2017-04-01",
+      "type": "Microsoft.EventHub/namespaces/eventhubs/authorizationRules",
+      "name": "[concat(variables('eventHubNamespaceName'), '/', variables('eventHubName'), '/Reader')]",
+      "dependsOn": [
+        "[concat('Microsoft.EventHub/namespaces/', variables('eventHubNamespaceName'), '/eventhubs/', variables('eventHubName'))]"
+      ],
+      "properties": {
+        "rights": ["Listen"]
+      }
     }
-  ]
+  ],
+	"outputs": {
+		"eventHubConnectionString" : {
+			"type" : "string",
+			"value": "[listkeys(variables('eventHubAuthRuleId'), '2017-04-01').primaryConnectionString]"
+    }
+	}
 }

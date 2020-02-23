@@ -52,6 +52,28 @@
           "location":{ "value": "[parameters('location')]" }
         }
       }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "name": "function-linked-template",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'functions.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "baseName":{ "value": "[parameters('baseName')]" },
+          "location":{ "value": "[parameters('location')]" },
+          "eventHubConnectionString": { "value" : "[reference('eventhub-linked-template').outputs.eventHubConnectionString.value]" },
+          "cosmosDbConnectionString": { "value" : "[reference('cosmosdb-linked-template').outputs.cosmosDbConnectionString.value]" }
+        },
+        "dependsOn": [
+          "cosmosdb-linked-template",
+          "eventhub-linked-template"
+        ]
+      }
     }
   ]
 }

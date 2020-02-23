@@ -118,5 +118,11 @@
 				}
 			}
 		}
-	]
+	],
+	"outputs": {
+		"cosmosDbConnectionString" : {
+			"type" : "string",
+			"value": "[listConnectionStrings(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('accountName')), '2019-12-12').connectionStrings[0].connectionString]"
+		}
+	}
 }

@@ -24,6 +24,18 @@
       "metadata": {
         "description": "The language worker runtime to load in the function app."
       }
+    },
+    "eventHubConnectionString": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Connection string for Azure Event Hub namespace (reader permission required)."
+      }
+    },
+    "cosmosDbConnectionString": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Connection string for Azure Cosmos DB account."
+      }
     }
   },
   "variables": {
@@ -91,7 +103,7 @@
             },
             {
               "name": "EventHubReaderConnection",
-              "value": "<<TODO>>"
+              "value": "[parameters('eventHubConnectionString')]"
             },
             {
               "name": "FUNCTIONS_EXTENSION_VERSION",
@@ -104,6 +116,13 @@
             {
               "name": "FUNCTIONS_WORKER_RUNTIME",
               "value": "[variables('functionWorkerRuntime')]"
+            }
+          ],
+          "connectionStrings": [
+            {
+              "name": "CosmosDBConnection",
+              "connectionString": "[parameters('cosmosDbConnectionString')]",
+              "type": "DocDb"
             }
           ]
         }
