@@ -68,11 +68,7 @@
           "location":{ "value": "[parameters('location')]" },
           "eventHubConnectionString": { "value" : "[reference('eventhub-linked-template').outputs.eventHubConnectionString.value]" },
           "cosmosDbConnectionString": { "value" : "[reference('cosmosdb-linked-template').outputs.cosmosDbConnectionString.value]" }
-        },
-        "dependsOn": [
-          "cosmosdb-linked-template",
-          "eventhub-linked-template"
-        ]
+        }
       }
     }
   ]
