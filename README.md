@@ -22,6 +22,8 @@ Azure serverless demo highlighting key functionalities of Azure Functions, API M
   - Run `terraform apply out.tfplan`
   - Note the outputs of `terraform apply`
 
+- Authorize the Dynamics CRM and Office365 API connections on Azure
+
 - To leverage GitHub Actions to continuous integrate & deploy Azure Functions, you have to add application settings to Azure Functions before deployment
   - Save Azure Cosmos DB primary connection string for later use
   - Create a new connection string entry with key `CosmosDBConnection` and value of Azure CosmosDB primary connection string (from above) in Azure Functions application settings (under `azure-serverless-func` -> "Configuration")
@@ -52,7 +54,8 @@ Azure serverless demo highlighting key functionalities of Azure Functions, API M
 
 ## Next Steps
 
-- [] IaC in TF or ARM (Azure Function, Azure CosmosDB)
+- [] IaC: Email Logicapp
+- [] IaC: Batch Logicapp
 - [] document steps to reproduce environment
 - [] document demo steps
 - [] use azure app configuration
