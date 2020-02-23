@@ -34,10 +34,21 @@ Azure serverless demo highlighting key functionalities of Azure Functions, API M
 - In `functions/`,
   - Run `func extensions install` to install Azure Functions extensions required to run the demo. This may require installation of other dependencies such as `dotnet`
 
+## Considerations
+
+- To use linked template, you can only provide a URI value that includes either http or https ([ref](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/linked-templates#linked-template)). You can't specify a local file or a file that is only available on your local network.
+
+- Although the linked template must be externally available, it doesn't need to be generally available to the public. You can add your template to a private storage account that is accessible to only the storage account owner. Then, you create a shared access signature (SAS) token to enable access during deployment ([ref](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/linked-templates#securing-an-external-template)).
+
+- Use type `securestring` for secrets, keys, and connection strings
+
+- Instead of putting a secure value (like a password) directly in your template or parameter file, you can retrieve the value from an Azure Key Vault during a deployment. You retrieve the value by referencing the key vault and secret in your parameter file. The value is never exposed because you only reference its key vault ID ([ref](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/key-vault-parameter?tabs=azure-cli)).
+
 ## References
 
 - [Azure Functions Python developer guide](https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-python)
-- [Azure Functions Python Samples](https://github.com/yokawasa/azure-functions-python-samples/blob/master/v2functions/cosmos-trigger-cosmodb-output-binding/__init__.py)
+- [Azure Functions Python samples](https://github.com/yokawasa/azure-functions-python-samples/blob/master/v2functions/cosmos-trigger-cosmodb-output-binding/__init__.py)
+- [Azure Resource Manager (ARM) template best practice](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/template-best-practices)
 
 ## Next Steps
 
