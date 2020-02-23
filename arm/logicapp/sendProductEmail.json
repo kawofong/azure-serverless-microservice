@@ -37,7 +37,6 @@
     }
   },
   "variables": {
-    "apiConnectionName": "[concat(parameters('baseName'), '-apiconn-office365')]",
     "logicAppWorkflowName": "[concat(parameters('baseName'),'-logicapp-sendemail')]"
   },
   "resources": [
