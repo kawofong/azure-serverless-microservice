@@ -130,9 +130,9 @@
     }
   ],
   "outputs": {
-    "FunctionsEndpoint": {
+    "FunctionAppName": {
       "type": "string",
-      "value": "[concat('https://', variables('functionAppName'), 'azurewebsites.net')]"
+      "value": "[variables('functionAppName')]"
     }
   }
 }

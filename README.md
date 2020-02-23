@@ -53,15 +53,12 @@ Azure serverless demo highlighting key functionalities of Azure Functions, API M
 ## Next Steps
 
 - [] IaC in TF or ARM (Azure Function, Azure CosmosDB)
-- [] abstract configurations into app settings (https://docs.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings)
-- [] test function CI/CD
+- [] document steps to reproduce environment
+- [] document demo steps
 - [] use azure app configuration
 - [] Demo Azure Function in JS
 - [] Logic App Integration
-- [] Event hub integration
-- [] CI/CD
 - [] Telemetry
-- [] API management
 - [] Alerts & Notification
 - [] DR
 
