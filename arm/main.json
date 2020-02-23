@@ -133,6 +133,41 @@
           "location":{ "value": "[parameters('location')]" }
         }
       }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "name": "office365-apiconn-linked-template",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, './apiconnection/office365.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "baseName":{ "value": "[parameters('baseName')]" },
+          "location":{ "value": "[parameters('location')]" }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "name": "logicapp-sendproductemail-linked-template",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, './logicapp/sendProductEmail.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "baseName": { "value": "[parameters('baseName')]" },
+          "location": { "value": "[parameters('location')]" },
+          "connections_dynamicscrmonline_externalid": { "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Web/connections/', reference('dynamicscrm-apiconn-linked-template').outputs.apiConnectionName.value)]" },
+          "connections_office365_externalid": { "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Web/connections/', reference('office365-apiconn-linked-template').outputs.apiConnectionName.value)]" },
+          "ownerEmail": { "value": "[parameters('ownerEmail')]" }
+        }
+      }
     }
   ]
 }
