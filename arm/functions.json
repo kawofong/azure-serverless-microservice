@@ -115,7 +115,7 @@
             },
             {
               "name": "FUNCTIONS_WORKER_RUNTIME",
-              "value": "[variables('functionWorkerRuntime')]"
+              "value": "python"
             }
           ],
           "connectionStrings": [
