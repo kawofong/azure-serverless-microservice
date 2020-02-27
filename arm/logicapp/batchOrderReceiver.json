@@ -1,0 +1,434 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "baseName": {
+            "type": "string",
+            "maxLength": 10,
+            "minLength": 3,
+            "metadata": {
+                "description": "The base name to use as prefix to create all the resources."
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Specifies the Azure location for all resources."
+            }
+        },
+        "connections_documentdb_externalid": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource id of Azure Cosmos DB API connection."
+            }
+        }
+    },
+    "variables": {
+        "logicAppWorkflowName": "[concat(parameters('baseName'),'-logicapp-batchreceiver')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[variables('logicAppWorkflowName')]",
+            "location": "eastus",
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "Trigger:_Batch_Order_Files": {
+                            "type": "Batch",
+                            "inputs": {
+                                "configurations": {
+                                    "OrderFiles": {
+                                        "releaseCriteria": {
+                                            "messageCount": 3
+                                        }
+                                    }
+                                },
+                                "mode": "Inline"
+                            }
+                        }
+                    },
+                    "actions": {
+                        "ForEach:_Ingest_Documents_to_Azure_Cosmos_DB": {
+                            "foreach": "@body('ParseJSON:_Merged_Order_Files')",
+                            "actions": {
+                                "AzureCosmos:_Create_Document": {
+                                    "runAfter": {
+                                        "Compose:_Create_Document": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "body": "@outputs('Compose:_Create_Document')",
+                                        "headers": {
+                                            "x-ms-documentdb-raw-partitionkey": "\"@{items('ForEach:_Ingest_Documents_to_Azure_Cosmos_DB')?['headers']?['salesNumber']}\""
+                                        },
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['documentdb']['connectionId']"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "path": "/dbs/@{encodeURIComponent('ContosoDB')}/colls/@{encodeURIComponent('Orders')}/docs"
+                                    }
+                                },
+                                "Compose:_Create_Document": {
+                                    "runAfter": {},
+                                    "type": "Compose",
+                                    "inputs": {
+                                        "id": "@{guid()}",
+                                        "item": "@item()"
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "ParseJSON:_Merged_Order_Files": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Foreach"
+                        },
+                        "ForEach:_Order_File_Metadata": {
+                            "foreach": "@body('ParseJSON:_Order_Files_Metadata')",
+                            "actions": {
+                                "Condition:_If_Url_contains_\"ProductInformation\"": {
+                                    "actions": {
+                                        "Variable:_Set_ProductInformation": {
+                                            "runAfter": {},
+                                            "type": "SetVariable",
+                                            "inputs": {
+                                                "name": "ProductInformation",
+                                                "value": "@{item()?['content']?['url']}"
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {},
+                                    "else": {
+                                        "actions": {
+                                            "Condition:_If_Url_contains_\"OrderLineItems\"": {
+                                                "actions": {
+                                                    "Variable:_Set_OrderLineItems": {
+                                                        "runAfter": {},
+                                                        "type": "SetVariable",
+                                                        "inputs": {
+                                                            "name": "OrderLineItems",
+                                                            "value": "@{item()?['content']?['url']}"
+                                                        }
+                                                    }
+                                                },
+                                                "runAfter": {},
+                                                "else": {
+                                                    "actions": {
+                                                        "Condition:_If_Url_contains_\"OrderHeaderDetails\"": {
+                                                            "actions": {
+                                                                "Variable:_Set_OrderHeaderDetails": {
+                                                                    "runAfter": {},
+                                                                    "type": "SetVariable",
+                                                                    "inputs": {
+                                                                        "name": "OrderHeaderDetails",
+                                                                        "value": "@{item()?['content']?['url']}"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "runAfter": {},
+                                                            "expression": {
+                                                                "and": [
+                                                                    {
+                                                                        "contains": [
+                                                                            "@item()?['content']?['url']",
+                                                                            "OrderHeaderDetails"
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "type": "If"
+                                                        }
+                                                    }
+                                                },
+                                                "expression": {
+                                                    "and": [
+                                                        {
+                                                            "contains": [
+                                                                "@item()?['content']?['url']",
+                                                                "OrderLineItems"
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                "type": "If"
+                                            }
+                                        }
+                                    },
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "contains": [
+                                                    "@item()?['content']?['url']",
+                                                    "ProductInformation"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type": "If"
+                                }
+                            },
+                            "runAfter": {
+                                "Variable:_Product_Information": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Foreach"
+                        },
+                        "HTTP:_Merge_Order_Files": {
+                            "runAfter": {
+                                "ForEach:_Order_File_Metadata": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Http",
+                            "inputs": {
+                                "body": {
+                                    "orderHeaderDetailsCSVUrl": "@variables('OrderHeaderDetails')",
+                                    "orderLineItemsCSVUrl": "@variables('OrderLineItems')",
+                                    "productInformationCSVUrl": "@variables('ProductInformation')"
+                                },
+                                "method": "POST",
+                                "uri": "https://serverlessohmanagementapi.trafficmanager.net/api/order/combineOrderContent"
+                            }
+                        },
+                        "ParseJSON:_Merged_Order_Files": {
+                            "runAfter": {
+                                "HTTP:_Merge_Order_Files": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ParseJson",
+                            "inputs": {
+                                "content": "@body('HTTP:_Merge_Order_Files')",
+                                "schema": {
+                                    "items": {
+                                        "properties": {
+                                            "details": {
+                                                "items": {
+                                                    "properties": {
+                                                        "productDescription": {
+                                                            "type": "string"
+                                                        },
+                                                        "productId": {
+                                                            "type": "string"
+                                                        },
+                                                        "productName": {
+                                                            "type": "string"
+                                                        },
+                                                        "quantity": {
+                                                            "type": "string"
+                                                        },
+                                                        "totalCost": {
+                                                            "type": "string"
+                                                        },
+                                                        "totalTax": {
+                                                            "type": "string"
+                                                        },
+                                                        "unitCost": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "productId",
+                                                        "quantity",
+                                                        "unitCost",
+                                                        "totalCost",
+                                                        "totalTax",
+                                                        "productName",
+                                                        "productDescription"
+                                                    ],
+                                                    "type": "object"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "headers": {
+                                                "properties": {
+                                                    "dateTime": {
+                                                        "type": "string"
+                                                    },
+                                                    "locationAddress": {
+                                                        "type": "string"
+                                                    },
+                                                    "locationId": {
+                                                        "type": "string"
+                                                    },
+                                                    "locationName": {
+                                                        "type": "string"
+                                                    },
+                                                    "locationPostcode": {
+                                                        "type": "string"
+                                                    },
+                                                    "salesNumber": {
+                                                        "type": "string"
+                                                    },
+                                                    "totalCost": {
+                                                        "type": "string"
+                                                    },
+                                                    "totalTax": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "required": [
+                                            "headers",
+                                            "details"
+                                        ],
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "ParseJSON:_Order_Files_Metadata": {
+                            "runAfter": {},
+                            "type": "ParseJson",
+                            "inputs": {
+                                "content": "@triggerBody()['items']",
+                                "schema": {
+                                    "items": {
+                                        "properties": {
+                                            "content": {
+                                                "properties": {
+                                                    "api": {
+                                                        "type": "string"
+                                                    },
+                                                    "blobType": {
+                                                        "type": "string"
+                                                    },
+                                                    "clientRequestId": {
+                                                        "type": "string"
+                                                    },
+                                                    "contentLength": {
+                                                        "type": "integer"
+                                                    },
+                                                    "contentType": {
+                                                        "type": "string"
+                                                    },
+                                                    "eTag": {
+                                                        "type": "string"
+                                                    },
+                                                    "requestId": {
+                                                        "type": "string"
+                                                    },
+                                                    "sequencer": {
+                                                        "type": "string"
+                                                    },
+                                                    "storageDiagnostics": {
+                                                        "properties": {
+                                                            "batchId": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "url": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "messageId": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "messageId",
+                                            "content"
+                                        ],
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "Variable:_Order_Header_Details": {
+                            "runAfter": {
+                                "ParseJSON:_Order_Files_Metadata": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "OrderHeaderDetails",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Variable:_Order_Line_Items": {
+                            "runAfter": {
+                                "Variable:_Order_Header_Details": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "OrderLineItems",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Variable:_Product_Information": {
+                            "runAfter": {
+                                "Variable:_Order_Line_Items": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "ProductInformation",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "documentdb": {
+                                "connectionId": "[parameters('connections_documentdb_externalid')]",
+                                "connectionName": "documentdb",
+                                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/eastus/managedApis/documentdb')]"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "logicAppWorkflowName" : {
+            "type" : "string",
+            "value": "[variables('logicAppWorkflowName')]"
+        }
+    }
+  }
