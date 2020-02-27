@@ -22,15 +22,16 @@ Azure serverless demo highlighting key functionalities of Azure Functions, API M
   - Run `terraform apply out.tfplan`
   - Note the outputs of `terraform apply`
 
-- Authorize Dynamics CRM and Office365 API connections for Logic App workflow
-  - Open API connection resource -> "Edit API Connection" -> "Authorize" -> follow authorization flow
+- Complete authorization of API connections for Logic App workflow
+  - For each API connection resource, navigate to the API connection resource -> "Edit API Connection" -> press "Authorize" button and follow authorization flow OR enter necessary information
 
-- To leverage GitHub Actions to continuous integrate & deploy Azure Functions, you have to add application settings to Azure Functions before deployment
-  - Save Azure Cosmos DB primary connection string for later use
-  - Create a new connection string entry with key `CosmosDBConnection` and value of Azure CosmosDB primary connection string (from above) in Azure Functions application settings (under `azure-serverless-func` -> "Configuration")
+<!-- - To leverage GitHub Actions to continuous integrate & deploy Azure Functions, you have to add application settings to Azure Functions before deployment
+  - Under Azure Functions application settings (navigate to "Azure Function resource" -> "Configuration"), create a new connection string entry with key `CosmosDBConnection`
+  -  -->
 
-- To configure GitHub Actions with Azure, take the below steps
-  - Follow steps [here](https://github.com/marketplace/actions/azure-functions-action#using-publish-profile-as-deployment-credential)
+- To configure GitHub Actions to continuous integrate & deploy to Azure Functions, take the below steps
+  - In `.github/workflows/az_func_py_wf.yaml`, replace `app-name: <<TODO>>` (line 53) with `app-name: {Azure Function App Name}`
+  - Follow the steps under the section "[Using Publish Profile as Deployment Credential](https://github.com/marketplace/actions/azure-functions-action#using-publish-profile-as-deployment-credential)"
 
 - For local development, use [Azure Functions Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=linux) to test Azure Functions locally
 
