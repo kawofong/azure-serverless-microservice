@@ -200,6 +200,23 @@
           "ownerEmail": { "value": "[parameters('ownerEmail')]" }
         }
       }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "name": "logicapp-batchorderreceiver-linked-template",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, './logicapp/batchOrderReceiver.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "baseName": { "value": "[parameters('baseName')]" },
+          "location": { "value": "[parameters('location')]" },
+          "connections_documentdb_externalid": { "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Web/connections/', reference('cosmosdb-apiconn-linked-template').outputs.apiConnectionName.value)]" }
+        }
+      }
     }
   ]
 }
