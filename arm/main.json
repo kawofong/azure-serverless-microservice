@@ -217,6 +217,25 @@
           "connections_documentdb_externalid": { "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Web/connections/', reference('cosmosdb-apiconn-linked-template').outputs.apiConnectionName.value)]" }
         }
       }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "name": "logicapp-batchordersender-linked-template",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, './logicapp/batchOrderSender.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "baseName": { "value": "[parameters('baseName')]" },
+          "location": { "value": "[parameters('location')]" },
+          "storageAccounts_externalid": { "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Storage/storageAccounts/', reference('storage-linked-template').outputs.storageAccountName.value)]" },
+          "workflows_logicapp_batchreceiver_externalid": { "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Logic/workflows/', reference('logicapp-batchorderreceiver-linked-template').outputs.logicAppWorkflowName.value)]" },
+          "connections_azureeventgrid_externalid": { "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Web/connections/', reference('eventgrid-apiconn-linked-template').outputs.apiConnectionName.value)]" }
+        }
+      }
     }
   ]
 }

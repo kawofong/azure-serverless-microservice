@@ -1,0 +1,147 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "baseName": {
+            "type": "string",
+            "maxLength": 10,
+            "minLength": 3,
+            "metadata": {
+                "description": "The base name to use as prefix to create all the resources."
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Specifies the Azure location for all resources."
+            }
+        },
+        "storageAccounts_externalid": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource id of storage account where blobs are created."
+            }
+        },
+        "workflows_logicapp_batchreceiver_externalid": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource id of Logic App batch order receiver workflow."
+            }
+        },
+        "connections_azureeventgrid_externalid": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource id of Azure Event Grid API connection."
+            }
+        }
+    },
+    "variables": {
+        "logicAppWorkflowName": "[concat(parameters('baseName'),'-logicapp-batchsender')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[variables('logicAppWorkflowName')]",
+            "location": "eastus",
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "EventGrid:_When_Blob_is_Created": {
+                            "splitOn": "@triggerBody()",
+                            "type": "ApiConnectionWebhook",
+                            "inputs": {
+                                "body": {
+                                    "properties": {
+                                        "destination": {
+                                            "endpointType": "webhook",
+                                            "properties": {
+                                                "endpointUrl": "@{listCallbackUrl()}"
+                                            }
+                                        },
+                                        "filter": {
+                                            "includedEventTypes": [
+                                                "Microsoft.Storage.BlobCreated"
+                                            ]
+                                        },
+                                        "topic": "[parameters('storageAccounts_externalid')]"
+                                    }
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azureeventgrid']['connectionId']"
+                                    }
+                                },
+                                "path": "/subscriptions/@{encodeURIComponent('7c9d382c-5964-48db-9cf6-c595c7ba4339')}/providers/@{encodeURIComponent('Microsoft.Storage.StorageAccounts')}/resource/eventSubscriptions",
+                                "queries": {
+                                    "x-ms-api-version": "2017-06-15-preview"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Condition:_If_Subject_Contains_\"orders\"": {
+                            "actions": {
+                                "Batch:_Trigger_Batch_Receiver_Logic_App": {
+                                    "runAfter": {},
+                                    "type": "SendToBatch",
+                                    "inputs": {
+                                        "batchName": "OrderFiles",
+                                        "content": "@triggerBody()?['data']",
+                                        "host": {
+                                            "triggerName": "Trigger:_Batch_Order_Files",
+                                            "workflow": {
+                                                "id": "[parameters('workflows_logicapp_batchreceiver_externalid')]"
+                                            }
+                                        },
+                                        "partitionName": "@{substring(triggerBody()?['subject'], 46, 14)}"
+                                    }
+                                }
+                            },
+                            "runAfter": {},
+                            "expression": {
+                                "and": [
+                                    {
+                                        "contains": [
+                                            "@triggerBody()?['subject']",
+                                            "orders"
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type": "If"
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azureeventgrid": {
+                                "connectionId": "[parameters('connections_azureeventgrid_externalid')]",
+                                "connectionName": "azureeventgrid",
+                                "id": "/subscriptions/7c9d382c-5964-48db-9cf6-c595c7ba4339/providers/Microsoft.Web/locations/eastus/managedApis/azureeventgrid"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "logicAppWorkflowName" : {
+            "type" : "string",
+            "value": "[variables('logicAppWorkflowName')]"
+        }
+    }
+  }
