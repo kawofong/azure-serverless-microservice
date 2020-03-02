@@ -4,7 +4,6 @@ Azure serverless demo highlighting key functionalities of Azure Functions, API M
 
 ## Pre-requisite
 
-- [Terraform](https://www.terraform.io/downloads.html)
 - [Postman](https://www.getpostman.com/downloads/)
 - [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest)
 - [VS Code](https://code.visualstudio.com/download)
@@ -13,14 +12,6 @@ Azure serverless demo highlighting key functionalities of Azure Functions, API M
 ## Getting Started
 
 - Clone the repository
-
-- In `./terraform`:
-  - Change `prefix` in `variables.tf` because Azure Storage and Azure Function names has to be globally unique
-    - For the remainder of the documentation, the prefix `azure-serverless` **WILL BE ASSUMED**
-  - Run `terraform init` to initialize Terraform
-  - Run `terraform plan -out=out.tfplan`
-  - Run `terraform apply out.tfplan`
-  - Note the outputs of `terraform apply`
 
 - Complete authorization of API connections for Logic App workflow
   - For each API connection resource, navigate to the API connection resource -> "Edit API Connection" -> press "Authorize" button and follow authorization flow OR enter necessary information
@@ -32,6 +23,11 @@ Azure serverless demo highlighting key functionalities of Azure Functions, API M
 - To configure GitHub Actions to continuous integrate & deploy to Azure Functions, take the below steps
   - In `.github/workflows/az_func_py_wf.yaml`, replace `app-name: <<TODO>>` (line 53) with `app-name: {Azure Function App Name}`
   - Follow the steps under the section "[Using Publish Profile as Deployment Credential](https://github.com/marketplace/actions/azure-functions-action#using-publish-profile-as-deployment-credential)"
+
+- You can use Postman to test the solution
+  - TODO
+
+---
 
 - For local development, use [Azure Functions Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=linux) to test Azure Functions locally
 
