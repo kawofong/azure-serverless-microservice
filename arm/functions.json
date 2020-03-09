@@ -62,13 +62,15 @@
       "apiVersion": "2019-08-01",
       "name": "[variables('hostingPlanName')]",
       "location": "[parameters('location')]",
+      "kind": "linux",
       "sku": {
         "name": "Y1",
         "tier": "Dynamic"
       },
       "properties": {
         "name": "[variables('hostingPlanName')]",
-        "computeMode": "Dynamic"
+        "computeMode": "Dynamic",
+        "reserved": false
       }
     },
     {
