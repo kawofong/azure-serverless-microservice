@@ -13,7 +13,7 @@
 
 - Logic App offers [hundreds of ready-to-use connectors](https://docs.microsoft.com/en-us/azure/connectors/apis-list) (which includes Azure Functions, Azure Storage, Azure SQL Database, SAP, Office365, Oracle Database, and more) to simplify integration of apps, data, systems, and services across enterprises or organizations
 
-- You can build logic apps  visually with the Logic Apps Designer, which is available in the Azure portal through your browser and in Visual Studio
+- You can build logic apps visually with the Logic Apps Designer, which is available in the Azure portal through your browser and in Visual Studio
 
 - Logic app supports [batch processing](https://docs.microsoft.com/en-us/azure/logic-apps/logic-apps-batch-process-send-receive-messages) that collects messages into a batch until your specified criteria are met for releasing and processing the batched messages. This pattern requires a "[batch receiver](https://docs.microsoft.com/en-us/azure/logic-apps/logic-apps-batch-process-send-receive-messages#batch-receiver)" and a "[batch sender](https://docs.microsoft.com/en-us/azure/logic-apps/logic-apps-batch-process-send-receive-messages#create-batch-sender)" logic apps
 

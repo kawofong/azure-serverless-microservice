@@ -28,7 +28,7 @@ set -o pipefail
 
 # Environment variables (and their defaults) that this script depends on
 AZ_SUBSCRIPTION_ID="${AZ_SUBSCRIPTION_ID:-1234}"                        # Azure subscription id
-ARM_TEMPLATE_URI="${ARM_TEMPLATE_URI:-https://raw.githubusercontent.com/kawo123/azure-serverless-microservice/master/arm/main.json}"               # File path to Azure environment ARM template
+ARM_TEMPLATE_URI="${ARM_TEMPLATE_URI:-https://raw.githubusercontent.com/kawo123/azure-serverless-microservice/master/arm/main.json}" # File path to Azure environment ARM template
 AZ_REGION="${AZ_REGION:-eastus}"                                        # Azure region
 AZ_BASE_NAME="${AZ_BASE_NAME:-GEN-UNIQUE}"                              # Base name for Azure resources
 
