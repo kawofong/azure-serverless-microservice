@@ -1,16 +1,21 @@
-
-# Action Requires
-# 1. Setup the AZURE_CREDENTIALS secrets in your GitHub Repository
-# 2. Replace PLEASE_REPLACE_THIS_WITH_YOUR_FUNCTION_APP_NAME with your Azure function app name
-# 3. Add this yaml file to your project's .github/workflows/
-# 4. Push your local project to your GitHub Repository
-
 name: az_func_py_wf
 
 on:
   push:
     branches:
     - master
+
+# CONFIGURATION
+# For help, go to https://github.com/Azure/Actions
+#
+# 1. Set up the following secrets in your repository:
+#   AZURE_FUNCTIONAPP_PUBLISH_PROFILE
+#
+# 2. Change these variables for your configuration:
+env:
+  AZURE_FUNCTIONAPP_NAME: azfunckf-func # set this to your application's name
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'   # set this to the path to your web app project, defaults to the repository root
+  PYTHON_VERSION: '3.7'                 # set this to the python version to use (supports 3.6, 3.7, 3.8)
 
 jobs:
   build-and-deploy:
@@ -19,17 +24,17 @@ jobs:
     - name: 'Checkout GitHub Action'
       uses: actions/checkout@master
 
-    - name: Setup Python 3.6
+    - name: Setup Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v1
       with:
-        python-version: 3.6
+        python-version: ${{ env.PYTHON_VERSION }}
 
     - name: 'Install Azure Functions extensions'
       shell: bash
       run: |
         # If your function app project is not located in your repository's root
         # Please change your directory for pip in pushd
-        pushd ./functions
+        pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
         if [ -f extensions.csproj ]
         then
             dotnet build extensions.csproj --runtime ubuntu.16.04-x64 --output ./bin
@@ -41,7 +46,7 @@ jobs:
       run: |
         # If your function app project is not located in your repository's root
         # Please change your directory for pip in pushd
-        pushd ./functions
+        pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
         python -m pip install --upgrade pip
         pip install -r requirements.txt --target=".python_packages/lib/site-packages"
         popd
@@ -50,11 +55,9 @@ jobs:
       uses: Azure/functions-action@v1
       id: fa
       with:
-        app-name: azfunckf-func
-        publish-profile: ${{ secrets.SCM_CREDENTIALS }}
-        # If your function app project is not located in your repository's root
-        # Please consider prefixing the project path in this package parameter
-        package: './functions'
+        app-name: ${{ secrets.AZURE_FUNCTIONAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+        package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
 
     - name: 'use the published functionapp url in upcoming steps'
       run: |
