@@ -52,11 +52,9 @@ Azure serverless demo highlighting key functionalities of Azure Functions, API M
 
 ## Next Steps
 
-- [] IaC: Email Logicapp
-- [] IaC: Batch Logicapp
 - [] document steps to reproduce environment
+- [] fix functions ARM template to deploy linux functions
 - [] document demo steps
-- [] use azure app configuration
 - [] Demo Azure Function in JS
 - [] Logic App Integration
 - [] Telemetry
